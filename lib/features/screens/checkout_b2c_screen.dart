@@ -42,7 +42,7 @@ class _CheckoutB2cScreenState extends ConsumerState<CheckoutB2cScreen> {
 
   void _ensurePoll() {
     final status = _status;
-    if (_payment == null || status == 'PAID' || status == 'EXPIRED' || status == 'FAILED') {
+    if (_payment == null || _navigated || status == 'EXPIRED' || status == 'FAILED') {
       _poll?.cancel();
       _poll = null;
       return;
@@ -87,8 +87,11 @@ class _CheckoutB2cScreenState extends ConsumerState<CheckoutB2cScreen> {
       final status = s['status']?.toString();
       setState(() => _status = status);
       _ensurePoll();
-      final paid = status == 'PAID' || s['upgraded'] == true;
-      if (paid) {
+      final upgraded = s['upgraded'] == true;
+      if (status == 'PAID' && !upgraded) {
+        return;
+      }
+      if (status == 'PAID' && upgraded) {
         _poll?.cancel();
         _poll = null;
         await ref.read(authControllerProvider.notifier).refreshProfileFromServer();
@@ -157,7 +160,7 @@ class _CheckoutB2cScreenState extends ConsumerState<CheckoutB2cScreen> {
                   Text('Trạng thái: ${_status ?? _payment!.status}'),
                   const SizedBox(height: 8),
                   const Text(
-                    'Đang chờ webhook SePay. Bạn có thể đợi hoặc bấm kiểm tra thủ công.',
+                    'Đang chờ ngân hàng xác nhận (có thể mất 1–2 phút). App vẫn tự kiểm tra.',
                     style: TextStyle(color: AppColors.muted),
                   ),
                   const SizedBox(height: 12),
