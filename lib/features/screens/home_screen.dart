@@ -36,10 +36,15 @@ class HomeScreen extends ConsumerWidget {
             mode == 'offline' ? 'Chế độ tại di tích' : 'Chế độ khám phá từ xa',
             style: const TextStyle(color: AppColors.muted),
           ),
+          const SizedBox(height: 8),
+          Text(
+            'Cấp ${user?.level ?? 1} · ${user?.totalPoints ?? 0} XP',
+            style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.gold),
+          ),
           const SizedBox(height: 20),
           _QuickTile(
             title: 'Tour 360° Củ Chi',
-            subtitle: 'Đi xuyên các khu di tích',
+            subtitle: '14 cảnh · xem ≥15 giây nhận XP',
             icon: Icons.threesixty,
             color: AppColors.orange,
             onTap: () => context.push('/tour/360/$cuChiId'),
@@ -50,6 +55,13 @@ class HomeScreen extends ConsumerWidget {
             icon: Icons.explore,
             color: AppColors.blue,
             onTap: () => context.go('/explore'),
+          ),
+          _QuickTile(
+            title: 'Cổ vật Củ Chi',
+            subtitle: 'Bộ sưu tập đã mở khóa',
+            icon: Icons.museum_outlined,
+            color: const Color(0xFF7C3AED),
+            onTap: () => context.push('/artifacts/$cuChiId'),
           ),
           _QuickTile(
             title: 'Nhiệm vụ',

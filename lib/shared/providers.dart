@@ -6,10 +6,12 @@ import 'package:histar_mobile/features/auth/auth_repository.dart';
 import 'package:histar_mobile/features/auth/auth_state.dart';
 import 'package:histar_mobile/features/billing/billing_repository.dart';
 import 'package:histar_mobile/features/chat/chat_repository.dart';
+import 'package:histar_mobile/features/discovery/discovery_repository.dart';
 import 'package:histar_mobile/features/gamification/gamification_repository.dart';
 import 'package:histar_mobile/features/locations/locations_repository.dart';
 import 'package:histar_mobile/features/panorama/panorama_repository.dart';
 import 'package:histar_mobile/features/profile/profile_repository.dart';
+import 'package:histar_mobile/features/visit/visit_session_repository.dart';
 
 final sessionStorageProvider = Provider<SessionStorage>((ref) => SessionStorage());
 
@@ -41,8 +43,16 @@ final gamificationRepositoryProvider = Provider<GamificationRepository>((ref) {
   return GamificationRepository(ref.watch(apiClientProvider));
 });
 
+final discoveryRepositoryProvider = Provider<DiscoveryRepository>((ref) {
+  return DiscoveryRepository(ref.watch(apiClientProvider));
+});
+
 final billingRepositoryProvider = Provider<BillingRepository>((ref) {
   return BillingRepository(ref.watch(apiClientProvider));
+});
+
+final visitSessionRepositoryProvider = Provider<VisitSessionRepository>((ref) {
+  return VisitSessionRepository(ref.watch(apiClientProvider));
 });
 
 final authControllerProvider =

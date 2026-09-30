@@ -26,7 +26,10 @@ class ApiError implements Exception {
     );
   }
 
-  bool get isQuota => status == 422 && (quotaType != null || code.contains('QUOTA'));
+  bool get isQuota =>
+      code == 'QUOTA_EXCEEDED' ||
+      code.contains('QUOTA') ||
+      ((status == 403 || status == 422) && (quotaType != null || message.toLowerCase().contains('quota')));
 
   @override
   String toString() => 'ApiError($status $code): $message';

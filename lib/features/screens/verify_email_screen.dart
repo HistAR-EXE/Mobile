@@ -28,9 +28,10 @@ class VerifyEmailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Sau khi xác thực trên web, mở lại app hoặc bấm “Đã xác thực”.',
+              'Sau khi bấm liên kết trên web, quay lại app và chọn “Đã xác thực”. '
+              'Tester Closed: dùng demo@histar.vn nếu mail prod chưa gửi được.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.muted),
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const Spacer(),
             OutlinedButton(
@@ -43,7 +44,11 @@ class VerifyEmailScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () async {
-                await ref.read(authControllerProvider.notifier).bootstrap();
+                try {
+                  await ref.read(authControllerProvider.notifier).refreshProfileFromServer();
+                } catch (_) {
+                  await ref.read(authControllerProvider.notifier).bootstrap();
+                }
                 if (!context.mounted) return;
                 final auth = ref.read(authControllerProvider);
                 if (auth.user?.needsEmailVerification != true) {

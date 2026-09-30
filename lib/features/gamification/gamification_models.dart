@@ -67,17 +67,91 @@ class LeaderboardEntry {
     required this.displayName,
     required this.totalPoints,
     required this.rank,
+    this.currentUser = false,
   });
 
   final String displayName;
   final int totalPoints;
   final int rank;
+  final bool currentUser;
 
   factory LeaderboardEntry.fromJson(Map<String, dynamic> json) {
     return LeaderboardEntry(
       displayName: json['displayName'] as String? ?? json['name'] as String? ?? '—',
       totalPoints: (json['totalPoints'] as num?)?.toInt() ?? (json['points'] as num?)?.toInt() ?? 0,
       rank: (json['rank'] as num?)?.toInt() ?? 0,
+      currentUser: json['currentUser'] as bool? ?? false,
+    );
+  }
+}
+
+class LeaderboardResult {
+  const LeaderboardResult({
+    required this.entries,
+    this.scope,
+    this.city,
+    this.viewerRankLocked = false,
+    this.viewerRank,
+  });
+
+  final List<LeaderboardEntry> entries;
+  final String? scope;
+  final String? city;
+  final bool viewerRankLocked;
+  final int? viewerRank;
+
+  factory LeaderboardResult.fromJson(Map<String, dynamic> json) {
+    final rawEntries = json['entries'];
+    final entries = rawEntries is List
+        ? rawEntries
+            .whereType<Map>()
+            .map((e) => LeaderboardEntry.fromJson(Map<String, dynamic>.from(e)))
+            .toList()
+        : <LeaderboardEntry>[];
+    return LeaderboardResult(
+      entries: entries,
+      scope: json['scope'] as String?,
+      city: json['city'] as String?,
+      viewerRankLocked: json['viewerRankLocked'] as bool? ?? false,
+      viewerRank: (json['viewerRank'] as num?)?.toInt(),
+    );
+  }
+}
+
+class CheckinResult {
+  const CheckinResult({
+    required this.success,
+    required this.xpEarned,
+    required this.bonusXpAwarded,
+    required this.badgesEarned,
+    required this.secretUnlocked,
+  });
+
+  final bool success;
+  final int xpEarned;
+  final int bonusXpAwarded;
+  final List<String> badgesEarned;
+  final bool secretUnlocked;
+
+  int get totalXp => xpEarned + bonusXpAwarded;
+
+  factory CheckinResult.fromJson(Map<String, dynamic> json) {
+    final rawBadges = json['badgesEarned'];
+    final badgeNames = <String>[];
+    if (rawBadges is List) {
+      for (final b in rawBadges) {
+        if (b is Map) {
+          final name = b['name'] as String?;
+          if (name != null && name.isNotEmpty) badgeNames.add(name);
+        }
+      }
+    }
+    return CheckinResult(
+      success: json['success'] as bool? ?? true,
+      xpEarned: (json['xpEarned'] as num?)?.toInt() ?? 0,
+      bonusXpAwarded: (json['bonusXpAwarded'] as num?)?.toInt() ?? 0,
+      badgesEarned: badgeNames,
+      secretUnlocked: json['secretUnlocked'] as bool? ?? false,
     );
   }
 }

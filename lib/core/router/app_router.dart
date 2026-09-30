@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:histar_mobile/features/auth/auth_state.dart';
 import 'package:histar_mobile/features/shell/main_shell.dart';
 import 'package:histar_mobile/features/screens/admin_screen.dart';
+import 'package:histar_mobile/features/screens/artifacts_screen.dart';
 import 'package:histar_mobile/features/screens/chat_screen.dart';
 import 'package:histar_mobile/features/screens/checkout_b2c_screen.dart';
 import 'package:histar_mobile/features/screens/explore_screen.dart';
@@ -144,6 +145,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/tour/360/:locationId',
         builder: (_, state) =>
             Tour360Screen(locationId: state.pathParameters['locationId']!),
+      ),
+      GoRoute(
+        path: '/artifacts/:locationId',
+        builder: (_, state) =>
+            ArtifactsScreen(locationId: state.pathParameters['locationId']!),
       ),
       GoRoute(
         path: '/chat/:characterId',

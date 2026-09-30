@@ -15,7 +15,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "vn.histar.timelens"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler_android requires compileSdk ≥ 37
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

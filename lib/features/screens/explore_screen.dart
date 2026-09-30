@@ -49,6 +49,9 @@ class ExploreScreen extends ConsumerWidget {
               itemBuilder: (_, i) {
                 final loc = items[i];
                 final cover = AppEnv.resolveMedia(loc.coverImage);
+                const cuChiId = '11111111-1111-1111-1111-111111111111';
+                final isCuChi = loc.id == cuChiId;
+                final comingSoon = !isCuChi && loc.isUnlocked == false;
                 return Card(
                   margin: const EdgeInsets.only(bottom: 10),
                   clipBehavior: Clip.antiAlias,
@@ -72,10 +75,15 @@ class ExploreScreen extends ConsumerWidget {
                                 Text(loc.name, style: const TextStyle(fontWeight: FontWeight.w800)),
                                 const SizedBox(height: 4),
                                 Text(loc.city, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
-                                if (loc.isUnlocked == false)
+                                if (comingSoon)
                                   const Padding(
                                     padding: EdgeInsets.only(top: 6),
-                                    child: Text('🔒 Chưa mở khóa', style: TextStyle(fontSize: 12, color: AppColors.gold)),
+                                    child: Text('Sắp mở — nội dung đang bổ sung', style: TextStyle(fontSize: 12, color: AppColors.gold)),
+                                  )
+                                else if (loc.isUnlocked == false)
+                                  const Padding(
+                                    padding: EdgeInsets.only(top: 6),
+                                    child: Text('Chưa mở khóa', style: TextStyle(fontSize: 12, color: AppColors.gold)),
                                   ),
                               ],
                             ),

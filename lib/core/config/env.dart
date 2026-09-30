@@ -43,4 +43,14 @@ class AppEnv {
     if (url.startsWith('/')) return '$mediaBaseUrl$url';
     return '$mediaBaseUrl/$url';
   }
+
+  /// Mirrors FE `VITE_DISCOVERY_DWELL_MS` (default 15s).
+  static int get discoveryDwellMs {
+    final raw = dotenv.env['DISCOVERY_DWELL_MS']?.trim();
+    final parsed = int.tryParse(raw ?? '');
+    return parsed != null && parsed >= 0 ? parsed : 15000;
+  }
+
+  /// Keep in sync with [pubspec.yaml] version for Settings display.
+  static const String appVersion = '1.0.1+2';
 }

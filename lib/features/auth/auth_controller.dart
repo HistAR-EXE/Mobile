@@ -138,6 +138,8 @@ class AuthController extends StateNotifier<AuthState> {
         tier: me.tier,
         emailVerified: me.emailVerified,
         avatarUrl: me.avatarUrl,
+        level: me.level,
+        totalPoints: me.totalPoints,
       ),
     );
   }

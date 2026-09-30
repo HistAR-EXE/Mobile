@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:histar_mobile/core/config/env.dart';
 import 'package:histar_mobile/core/theme/app_theme.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -27,6 +28,12 @@ class OnboardingScreen extends StatelessWidget {
                 'Khám phá di sản Việt Nam qua Tour 360°, Cổng thời gian và AI Story Guide.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.muted, height: 1.4),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Time Portal đa kỷ nguyên và nhóm học tập có trên web: ${AppEnv.webAppUrl}',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.muted.withValues(alpha: 0.85), fontSize: 12, height: 1.35),
               ),
               const Spacer(),
               ElevatedButton(

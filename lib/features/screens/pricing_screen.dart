@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:histar_mobile/core/config/env.dart';
 import 'package:histar_mobile/core/theme/app_theme.dart';
 import 'package:histar_mobile/features/billing/billing_models.dart';
 import 'package:histar_mobile/shared/providers.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PricingScreen extends ConsumerWidget {
   const PricingScreen({super.key});
@@ -48,6 +50,12 @@ class PricingScreen extends ConsumerWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(color: AppColors.muted),
                       ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Time Portal & nhóm học tập: mở trên web ${AppEnv.webAppUrl}',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.muted.withValues(alpha: 0.9), fontSize: 12),
+                      ),
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () => context.push('/checkout/b2c?next=${Uri.encodeComponent('/home')}'),
@@ -67,6 +75,24 @@ class PricingScreen extends ConsumerWidget {
                     trailing: Text('${fmt.format(plan.priceVnd)}đ'),
                   ),
                 ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => launchUrl(
+                  Uri.parse('${AppEnv.webAppUrl}/checkout/b2b'),
+                  mode: LaunchMode.externalApplication,
+                ),
+                icon: const Icon(Icons.school_outlined),
+                label: const Text('Đăng ký gói trường (web)'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () => launchUrl(
+                  Uri.parse('${AppEnv.webAppUrl}/checkout/b2b2c'),
+                  mode: LaunchMode.externalApplication,
+                ),
+                icon: const Icon(Icons.museum_outlined),
+                label: const Text('Tư vấn số hóa di tích (web)'),
               ),
             ],
           );

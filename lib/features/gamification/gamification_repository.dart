@@ -31,7 +31,7 @@ class GamificationRepository {
     }
   }
 
-  Future<Map<String, dynamic>> checkin({
+  Future<CheckinResult> checkin({
     required String locationId,
     double? latitude,
     double? longitude,
@@ -45,13 +45,51 @@ class GamificationRepository {
         if (longitude != null) 'longitude': longitude,
         if (qrPayload != null) 'qrPayload': qrPayload,
       },
-      parse: (raw) => Map<String, dynamic>.from(raw as Map),
+      parse: (raw) => CheckinResult.fromJson(Map<String, dynamic>.from(raw as Map)),
     );
   }
 
-  Future<List<LeaderboardEntry>> leaderboard({int limit = 20}) => _api.getList(
+  Future<LeaderboardResult> leaderboard({
+    String scope = 'all',
+    String? city,
+    int limit = 20,
+  }) async {
+    try {
+      return await _api.getData(
         '/api/leaderboard',
-        query: {'limit': limit},
-        parseItem: LeaderboardEntry.fromJson,
+        query: {
+          'scope': scope,
+          if (city != null && city.isNotEmpty) 'city': city,
+          'limit': limit,
+        },
+        parse: (raw) {
+          if (raw is Map) {
+            return LeaderboardResult.fromJson(Map<String, dynamic>.from(raw));
+          }
+          if (raw is List) {
+            final entries = raw
+                .whereType<Map>()
+                .map((e) => LeaderboardEntry.fromJson(Map<String, dynamic>.from(e)))
+                .toList();
+            return LeaderboardResult(entries: entries, scope: scope, city: city);
+          }
+          return LeaderboardResult(entries: const [], scope: scope, city: city);
+        },
       );
+    } catch (_) {
+      if (scope != 'week') {
+        return leaderboard(scope: 'week', city: city, limit: limit);
+      }
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> myCompletedQuests({int size = 50}) async {
+    final page = await _api.getPage<Map<String, dynamic>>(
+      '/api/me/quests',
+      query: {'status': 'completed', 'size': size},
+      parseItem: (json) => json,
+    );
+    return page.items;
+  }
 }

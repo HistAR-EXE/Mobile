@@ -88,8 +88,16 @@ class _QuestDetailScreenState extends ConsumerState<QuestDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(
-                      onPressed: () => context.push('/tour/360/${_quest!.locationId}'),
+                      onPressed: () async {
+                        await context.push('/tour/360/${_quest!.locationId}');
+                        if (mounted) await _load();
+                      },
                       child: const Text('Mở Tour 360° liên quan'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: _load,
+                      child: const Text('Làm mới tiến độ'),
                     ),
                   ],
                 ),

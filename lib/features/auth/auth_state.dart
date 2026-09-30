@@ -56,6 +56,8 @@ class AuthUser {
     this.tier,
     this.emailVerified,
     this.avatarUrl,
+    this.level = 1,
+    this.totalPoints = 0,
   });
 
   final String userId;
@@ -65,6 +67,8 @@ class AuthUser {
   final String? tier;
   final bool? emailVerified;
   final String? avatarUrl;
+  final int level;
+  final int totalPoints;
 
   bool get isAdmin => role?.toUpperCase() == 'ADMIN';
   bool get isTeacher =>

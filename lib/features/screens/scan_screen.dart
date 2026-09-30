@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:histar_mobile/core/theme/app_theme.dart';
+import 'package:histar_mobile/features/gamification/gamification_models.dart';
 import 'package:histar_mobile/features/screens/home_screen.dart';
+import 'package:histar_mobile/features/visit/screen_visit_session.dart';
 import 'package:histar_mobile/shared/providers.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -19,34 +23,109 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   String? _result;
   bool _showScanner = false;
   bool _cameraDenied = false;
+  bool _locationDenied = false;
   String? _lastQr;
   DateTime? _lastQrAt;
+  late final ScreenVisitSession _visitSession;
+
+  @override
+  void initState() {
+    super.initState();
+    _visitSession = ScreenVisitSession(ref);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_visitSession.startIfAuthenticated(
+        locationId: cuChiId,
+        mode: 'onsite',
+      ));
+    });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_visitSession.end());
+    super.dispose();
+  }
+
+  Future<bool> _confirmPermissionRationale({
+    required String title,
+    required String message,
+  }) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Huỷ')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Tiếp tục')),
+        ],
+      ),
+    );
+    return ok == true;
+  }
+
+  void _showCheckinFeedback(CheckinResult res) {
+    final parts = <String>[];
+    if (res.totalXp > 0) {
+      parts.add('+${res.totalXp} XP');
+    }
+    if (res.badgesEarned.isNotEmpty) {
+      parts.add('Huy hiệu mới: ${res.badgesEarned.join(', ')}');
+    }
+    parts.add('Đã ghi dấu hộ chiếu số — xem trong Hồ sơ.');
+    if (res.secretUnlocked) {
+      parts.add('Đã mở bí mật di tích!');
+    }
+    final text = parts.join(' · ');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    setState(() => _result = text);
+  }
 
   Future<void> _checkinGps() async {
     setState(() {
       _busy = true;
       _result = null;
+      _locationDenied = false;
     });
     try {
+      final proceed = await _confirmPermissionRationale(
+        title: 'Quyền vị trí',
+        message:
+            'HistAR cần vị trí GPS để xác nhận bạn đang tại di tích và ghi check-in an toàn.',
+      );
+      if (!proceed) return;
+
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-      if (permission == LocationPermission.deniedForever ||
-          permission == LocationPermission.denied) {
-        throw Exception('Cần quyền vị trí để check-in GPS');
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          _locationDenied = true;
+          _result = 'Quyền vị trí bị từ chối vĩnh viễn. Mở Cài đặt để cấp quyền.';
+        });
+        return;
       }
+      if (permission == LocationPermission.denied) {
+        setState(() => _result = 'Cần quyền vị trí để check-in GPS.');
+        return;
+      }
+
       final pos = await Geolocator.getCurrentPosition();
       final res = await ref.read(gamificationRepositoryProvider).checkin(
             locationId: cuChiId,
             latitude: pos.latitude,
             longitude: pos.longitude,
           );
-      setState(() => _result = 'Check-in OK: ${res['message'] ?? res.toString()}');
+      try {
+        await ref.read(authControllerProvider.notifier).refreshProfileFromServer();
+      } catch (_) {}
+      if (!mounted) return;
+      _showCheckinFeedback(res);
     } catch (e) {
       setState(() => _result = 'Lỗi: $e');
     } finally {
-      setState(() => _busy = false);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -55,13 +134,20 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       setState(() => _showScanner = false);
       return;
     }
+
+    final proceed = await _confirmPermissionRationale(
+      title: 'Quyền camera',
+      message: 'Camera dùng để quét mã QR check-in tại di tích. Ảnh không được lưu trên máy chủ.',
+    );
+    if (!proceed) return;
+
     var status = await Permission.camera.status;
     if (!status.isGranted) {
       status = await Permission.camera.request();
     }
     if (!status.isGranted) {
       setState(() {
-        _cameraDenied = true;
+        _cameraDenied = status.isPermanentlyDenied;
         _showScanner = false;
         _result = status.isPermanentlyDenied
             ? 'Camera bị từ chối vĩnh viễn. Mở Cài đặt để cấp quyền.'
@@ -94,14 +180,16 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             locationId: cuChiId,
             qrPayload: raw,
           );
-      setState(() {
-        _result = 'QR OK: ${res['message'] ?? res.toString()}';
-        _showScanner = false;
-      });
+      try {
+        await ref.read(authControllerProvider.notifier).refreshProfileFromServer();
+      } catch (_) {}
+      if (!mounted) return;
+      _showCheckinFeedback(res);
+      setState(() => _showScanner = false);
     } catch (e) {
       setState(() => _result = 'Lỗi: $e');
     } finally {
-      setState(() => _busy = false);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -129,7 +217,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             icon: const Icon(Icons.qr_code_scanner),
             label: Text(_showScanner ? 'Ẩn camera QR' : 'Mở camera QR'),
           ),
-          if (_cameraDenied) ...[
+          if (_cameraDenied || _locationDenied) ...[
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: openAppSettings,

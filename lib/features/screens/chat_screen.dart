@@ -26,6 +26,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
+  Future<void> _showQuotaDialog() async {
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hết lượt chat miễn phí'),
+        content: const Text(
+          'Nâng cấp Premium 79.000đ/tháng để chat AI không giới hạn và mở gamification đầy đủ.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Để sau')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Xem gói 79k')),
+        ],
+      ),
+    );
+    if (go == true && mounted) {
+      context.push('/pricing');
+    }
+  }
+
   Future<void> _send() async {
     final text = _controller.text.trim();
     if (text.isEmpty || _sending) return;
@@ -50,12 +69,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final msg = e is ApiError ? e.message : e.toString();
       setState(() => _messages.add(_Bubble(text: 'Lỗi: $msg', isUser: false)));
       if (e is ApiError && e.isQuota) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            action: SnackBarAction(label: 'Premium', onPressed: () => context.push('/pricing')),
-          ),
-        );
+        await _showQuotaDialog();
       }
     } finally {
       if (mounted) setState(() => _sending = false);

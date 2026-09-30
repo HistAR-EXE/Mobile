@@ -18,7 +18,13 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           ListTile(
             title: const Text('Đổi chế độ Online / Offline'),
-            subtitle: Text(mode ?? 'chưa chọn'),
+            subtitle: Text(
+              mode == 'offline'
+                  ? 'Tại di tích (quét QR / GPS)'
+                  : mode == 'online'
+                      ? 'Khám phá từ xa'
+                      : 'chưa chọn',
+            ),
             onTap: () => context.push('/mode-select'),
           ),
           ListTile(
@@ -36,11 +42,22 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           ListTile(
+            title: const Text('Nhóm học tập (web)'),
+            onTap: () => launchUrl(
+              Uri.parse('${AppEnv.webAppUrl}/groups'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+          ListTile(
             title: const Text('Mở web app'),
             subtitle: Text(AppEnv.webAppUrl, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
             onTap: () => launchUrl(Uri.parse(AppEnv.webAppUrl), mode: LaunchMode.externalApplication),
           ),
           const Divider(),
+          ListTile(
+            title: const Text('Phiên bản'),
+            subtitle: Text(AppEnv.appVersion),
+          ),
           ListTile(
             title: const Text('API'),
             subtitle: Text(AppEnv.apiBaseUrl, style: const TextStyle(fontSize: 12)),

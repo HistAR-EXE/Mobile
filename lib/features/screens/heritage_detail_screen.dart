@@ -1,9 +1,12 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:histar_mobile/core/config/env.dart';
 import 'package:histar_mobile/core/theme/app_theme.dart';
 import 'package:histar_mobile/features/locations/location_models.dart';
 import 'package:histar_mobile/shared/providers.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HeritageDetailScreen extends ConsumerStatefulWidget {
   const HeritageDetailScreen({super.key, required this.locationId});
@@ -72,6 +75,21 @@ class _HeritageDetailScreenState extends ConsumerState<HeritageDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
+                      onPressed: () => launchUrl(
+                        Uri.parse('${AppEnv.webAppUrl}/tour/360/${widget.locationId}?view=map'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      icon: const Icon(Icons.map_outlined),
+                      label: const Text('Bản đồ tour (web)'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => context.push('/artifacts/${widget.locationId}'),
+                      icon: const Icon(Icons.museum_outlined),
+                      label: const Text('Cổ vật / sưu tập'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
                       onPressed: () => context.push('/quests'),
                       icon: const Icon(Icons.flag),
                       label: const Text('Xem nhiệm vụ'),
@@ -80,18 +98,24 @@ class _HeritageDetailScreenState extends ConsumerState<HeritageDetailScreen> {
                     const Text('Nhân vật AI', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                     const SizedBox(height: 8),
                     if (_chars.isEmpty)
-                      const Text('Chưa có nhân vật', style: TextStyle(color: AppColors.muted))
+                      const Text('Chưa có nhân vật cho địa điểm này', style: TextStyle(color: AppColors.muted))
                     else
-                      ..._chars.map(
-                        (c) => Card(
+                      ..._chars.map((c) {
+                        final portrait = AppEnv.resolveMedia(c.portraitUrl);
+                        return Card(
                           child: ListTile(
-                            title: Text(c.name),
-                            subtitle: Text(c.era),
+                            leading: CircleAvatar(
+                              backgroundColor: AppColors.surfaceAlt,
+                              backgroundImage: portrait.isNotEmpty ? CachedNetworkImageProvider(portrait) : null,
+                              child: portrait.isEmpty ? const Icon(Icons.person) : null,
+                            ),
+                            title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                            subtitle: Text(c.era.isEmpty ? 'Trò chuyện với nhân vật' : c.era),
                             trailing: const Icon(Icons.chat_bubble_outline),
                             onTap: () => context.push('/chat/${c.id}'),
                           ),
-                        ),
-                      ),
+                        );
+                      }),
                   ],
                 ),
     );
