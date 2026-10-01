@@ -18,6 +18,16 @@ class AuthRepository {
     return payload;
   }
 
+  Future<AuthPayload> googleLogin(String idToken) async {
+    final payload = await _api.postData(
+      '/api/auth/google',
+      data: {'idToken': idToken},
+      parse: (raw) => AuthPayload.fromJson(Map<String, dynamic>.from(raw as Map)),
+    );
+    await _persist(payload);
+    return payload;
+  }
+
   Future<AuthPayload> register({
     required String email,
     required String password,

@@ -18,7 +18,7 @@ class PublicPricing {
       }
     }
     return PublicPricing(
-      b2cPremiumPriceVnd: (json['b2cPremiumPriceVnd'] as num?)?.toInt() ?? 79000,
+      b2cPremiumPriceVnd: (json['b2cPremiumPriceVnd'] as num?)?.toInt() ?? 49000,
       chatFreeDailyLimit: (json['chatFreeDailyLimit'] as num?)?.toInt(),
       orgPlans: plans,
     );

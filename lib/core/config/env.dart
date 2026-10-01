@@ -36,6 +36,9 @@ class AppEnv {
     return raw.endsWith('/') ? raw.substring(0, raw.length - 1) : raw;
   }
 
+  /// Firebase **Web** client ID (OAuth) — required for `idToken` on Android/iOS.
+  static String get googleWebClientId => dotenv.env['GOOGLE_WEB_CLIENT_ID']?.trim() ?? '';
+
   /// Resolve relative `/media/...` URLs against MEDIA_BASE_URL.
   static String resolveMedia(String? url) {
     if (url == null || url.isEmpty) return '';

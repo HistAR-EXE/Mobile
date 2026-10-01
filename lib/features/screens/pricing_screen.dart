@@ -21,7 +21,7 @@ class PricingScreen extends ConsumerWidget {
           if (!snap.hasData) {
             if (snap.hasError) {
               return Center(
-                child: Text('Không tải giá (fallback 79.000đ).\n${snap.error}'),
+                child: Text('Không tải giá (fallback 49.000đ).\n${snap.error}'),
               );
             }
             return const Center(child: CircularProgressIndicator(color: AppColors.orange));

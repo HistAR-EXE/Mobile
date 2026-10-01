@@ -20,6 +20,7 @@ import 'package:histar_mobile/features/screens/quest_detail_screen.dart';
 import 'package:histar_mobile/features/screens/quests_screen.dart';
 import 'package:histar_mobile/features/screens/scan_screen.dart';
 import 'package:histar_mobile/features/screens/settings_screen.dart';
+import 'package:histar_mobile/features/screens/squad_screen.dart';
 import 'package:histar_mobile/features/screens/splash_screen.dart';
 import 'package:histar_mobile/features/screens/teacher_screen.dart';
 import 'package:histar_mobile/features/screens/tour360_screen.dart';
@@ -131,6 +132,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(path: '/scan', builder: (_, __) => const ScanScreen()),
+      GoRoute(path: '/squad', builder: (_, __) => const SquadScreen()),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
       GoRoute(path: '/pricing', builder: (_, __) => const PricingScreen()),
       GoRoute(

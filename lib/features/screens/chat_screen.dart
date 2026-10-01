@@ -32,11 +32,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Hết lượt chat miễn phí'),
         content: const Text(
-          'Nâng cấp Premium 79.000đ/tháng để chat AI không giới hạn và mở gamification đầy đủ.',
+          'Nâng cấp Premium 49.000đ/tháng để chat AI không giới hạn và mở gamification đầy đủ.',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Để sau')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Xem gói 79k')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Xem gói 49k')),
         ],
       ),
     );

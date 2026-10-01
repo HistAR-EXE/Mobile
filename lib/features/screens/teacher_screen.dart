@@ -44,6 +44,17 @@ class TeacherScreen extends ConsumerWidget {
               ),
             ),
           ),
+          Card(
+            child: ListTile(
+              title: const Text('Live Board (web)'),
+              subtitle: const Text('SSE tiến độ đoàn tại điểm'),
+              trailing: const Icon(Icons.open_in_new),
+              onTap: () => launchUrl(
+                Uri.parse('${AppEnv.webAppUrl}/teacher/live-board'),
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+          ),
         ],
       ),
     );

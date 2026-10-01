@@ -79,6 +79,11 @@ lib/
   shared/        providers
 ```
 
+## Tiểu đội (B7 co-op)
+
+- **Mobile:** màn `/squad` — REST `POST /api/squads`, `POST /api/squads/join`, `GET /api/squads/me` (xem `lib/features/squad/`).
+- **WebSocket live** (trạm/tiến độ đồng bộ): dùng FE [`/squad`](WEB_APP_URL/squad) hoặc deep-link **Mở lobby Web** trên màn tiểu đội. Native WS (`web_socket_channel`) có thể bổ sung sau; hiện ưu tiên parity REST trên app.
+
 ## Tour 360
 
 - Native: danh sách scene + ảnh panorama + chip scene-link từ API hotspots.

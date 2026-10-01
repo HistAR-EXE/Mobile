@@ -36,6 +36,10 @@ class GamificationRepository {
     double? latitude,
     double? longitude,
     String? qrPayload,
+    String? qrCode,
+    String? stationCode,
+    String? presenceMethod,
+    String? clientUuid,
   }) {
     return _api.postData(
       '/api/checkins',
@@ -44,6 +48,10 @@ class GamificationRepository {
         if (latitude != null) 'latitude': latitude,
         if (longitude != null) 'longitude': longitude,
         if (qrPayload != null) 'qrPayload': qrPayload,
+        if (qrCode != null) 'qrCode': qrCode,
+        if (stationCode != null) 'stationCode': stationCode,
+        if (presenceMethod != null) 'presenceMethod': presenceMethod,
+        if (clientUuid != null) 'clientUuid': clientUuid,
       },
       parse: (raw) => CheckinResult.fromJson(Map<String, dynamic>.from(raw as Map)),
     );

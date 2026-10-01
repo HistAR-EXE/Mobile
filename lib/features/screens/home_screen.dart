@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:histar_mobile/core/config/env.dart';
 import 'package:histar_mobile/core/theme/app_theme.dart';
 import 'package:histar_mobile/shared/providers.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const cuChiId = '11111111-1111-1111-1111-111111111111';
 
@@ -78,6 +80,38 @@ class HomeScreen extends ConsumerWidget {
               color: AppColors.gold,
               onTap: () => context.push('/scan'),
             ),
+          _QuickTile(
+            title: 'Hành trang offline (web)',
+            subtitle: 'Tải gói Lite/Full trước khi vào hầm',
+            icon: Icons.download_outlined,
+            color: AppColors.blue,
+            onTap: () => launchUrl(
+              Uri.parse('${AppEnv.webAppUrl}/pack-prep'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+          _QuickTile(
+            title: 'Hồ sơ giao liên (web)',
+            subtitle: 'Wrapped 9:16 · chia sẻ hành trình',
+            icon: Icons.auto_awesome,
+            color: const Color(0xFFA78BFA),
+            onTap: () => launchUrl(
+              Uri.parse('${AppEnv.webAppUrl}/journey-wrapped'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+          _QuickTile(
+            title: 'Mini-game ST01 (web)',
+            subtitle: 'Chơi game trạm · mở web PWA',
+            icon: Icons.sports_esports_outlined,
+            color: AppColors.orange,
+            onTap: () => launchUrl(
+              Uri.parse(
+                '${AppEnv.webAppUrl}/stations/ST01/game/b6000001-0000-4000-8000-000000000001',
+              ),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
           _QuickTile(
             title: 'Gói Premium',
             subtitle: 'Mở Time Portal 3 kỷ nguyên & AI không giới hạn',

@@ -24,6 +24,7 @@ class _CheckoutB2cScreenState extends ConsumerState<CheckoutB2cScreen> {
   B2cPaymentIntent? _payment;
   bool _loading = false;
   String? _status;
+  Map<String, dynamic>? _statusDetail;
   String? _error;
   Timer? _poll;
   bool _navigated = false;
@@ -85,7 +86,10 @@ class _CheckoutB2cScreenState extends ConsumerState<CheckoutB2cScreen> {
       final s = await ref.read(billingRepositoryProvider).b2cPaymentStatus(code);
       if (!mounted) return;
       final status = s['status']?.toString();
-      setState(() => _status = status);
+      setState(() {
+        _status = status;
+        _statusDetail = s;
+      });
       _ensurePoll();
       final upgraded = s['upgraded'] == true;
       if (status == 'PAID' && !upgraded) {
@@ -109,6 +113,48 @@ class _CheckoutB2cScreenState extends ConsumerState<CheckoutB2cScreen> {
     } finally {
       if (!silent && mounted) setState(() => _loading = false);
     }
+  }
+
+  /// UNDERPAID: show received vs expected, remaining top-up amount and the (same) transfer content.
+  Widget _buildUnderpaidNotice(NumberFormat fmt) {
+    final detail = _statusDetail;
+    final amount = (detail?['amountVnd'] as num?)?.toInt() ?? _payment!.amountVnd;
+    final received = (detail?['receivedAmountVnd'] as num?)?.toInt() ?? 0;
+    final remaining = (detail?['remainingAmountVnd'] as num?)?.toInt() ?? amount;
+    final content = detail?['transferContent']?.toString() ?? _payment!.transferContent;
+    return Container(
+      key: const Key('underpaid-notice'),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.12),
+        border: Border.all(color: Colors.orangeAccent),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Bạn đã chuyển thiếu tiền',
+            style: TextStyle(fontWeight: FontWeight.w800, color: Colors.orangeAccent),
+          ),
+          const SizedBox(height: 6),
+          Text('Đã nhận ${fmt.format(received)}đ / ${fmt.format(amount)}đ.'),
+          Text(
+            'Vui lòng chuyển bổ sung ${fmt.format(remaining)}đ với cùng nội dung chuyển khoản:',
+          ),
+          const SizedBox(height: 4),
+          SelectableText(
+            content,
+            style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.gold),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Chuyển dư (≥ số tiền) vẫn được chấp nhận. Premium tự kích hoạt khi tổng tiền đủ.',
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -159,10 +205,13 @@ class _CheckoutB2cScreenState extends ConsumerState<CheckoutB2cScreen> {
                   ),
                   Text('Trạng thái: ${_status ?? _payment!.status}'),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Đang chờ ngân hàng xác nhận (có thể mất 1–2 phút). App vẫn tự kiểm tra.',
-                    style: TextStyle(color: AppColors.muted),
-                  ),
+                  if ((_status ?? _payment!.status) == 'UNDERPAID')
+                    _buildUnderpaidNotice(fmt)
+                  else
+                    const Text(
+                      'Đang chờ ngân hàng xác nhận (có thể mất 1–2 phút). App vẫn tự kiểm tra.',
+                      style: TextStyle(color: AppColors.muted),
+                    ),
                   const SizedBox(height: 12),
                   if (_payment!.qrUrl.isNotEmpty)
                     Center(

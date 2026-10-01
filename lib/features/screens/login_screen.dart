@@ -29,6 +29,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _googleLogin() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(authControllerProvider.notifier).loginWithGoogle();
+      if (!mounted) return;
+      final auth = ref.read(authControllerProvider);
+      if (auth.user?.needsEmailVerification == true) {
+        context.go('/verify-email');
+      } else if (auth.appMode == null) {
+        context.go('/mode-select');
+      } else {
+        context.go('/home');
+      }
+    } catch (e) {
+      setState(() {
+        _error = e is ApiError ? e.message : e.toString();
+      });
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _submit() async {
     setState(() {
       _busy = true;
@@ -111,6 +136,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   )
                 : Text(widget.registerMode ? 'Tạo tài khoản' : 'Đăng nhập'),
           ),
+          if (!widget.registerMode) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _busy ? null : _googleLogin,
+              icon: const Icon(Icons.g_mobiledata, size: 28),
+              label: const Text('Tiếp tục với Google'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(48),
+                side: const BorderSide(color: AppColors.border),
+              ),
+            ),
+          ],
           TextButton(
             onPressed: () => context.go(widget.registerMode ? '/login' : '/register'),
             child: Text(

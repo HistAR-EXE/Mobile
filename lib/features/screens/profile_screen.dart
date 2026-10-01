@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:histar_mobile/core/config/env.dart';
+import 'package:histar_mobile/core/native/histar_native.dart';
 import 'package:histar_mobile/core/theme/app_theme.dart';
 import 'package:histar_mobile/features/discovery/discovery_models.dart';
 import 'package:histar_mobile/features/profile/passport_models.dart';
@@ -52,6 +55,51 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         _badgesLoading = false;
       });
     }
+  }
+
+  Future<void> _sharePassportExport() async {
+    final user = ref.read(authControllerProvider).user;
+    final buf = StringBuffer()
+      ..writeln('HistAR — Hộ chiếu số')
+      ..writeln('${user?.displayName ?? '—'} · ${user?.email ?? ''}')
+      ..writeln('XP: ${user?.totalPoints ?? 0} · Cấp ${user?.level ?? 1}')
+      ..writeln('');
+    if (_passportStamps.isEmpty) {
+      buf.writeln('Chưa có tem check-in.');
+    } else {
+      for (final s in _passportStamps) {
+        buf.writeln('- ${s.locationName ?? s.locationId}');
+      }
+    }
+    final file = File('${Directory.systemTemp.path}/histar-passport-export.txt');
+    await file.writeAsString(buf.toString());
+    await HistarNative.shareFile(file.path, subject: 'Hộ chiếu số HistAR');
+  }
+
+  Future<void> _shareJourneyExport() async {
+    final user = ref.read(authControllerProvider).user;
+    final earned = _badges.where((b) => b.earned).map((b) => b.name).toList();
+    final stampLines = _passportStamps
+        .map((s) => '• ${s.locationName ?? s.locationId}')
+        .join('\n');
+    final buffer = StringBuffer()
+      ..writeln('Hành trình HistAR — ${user?.displayName ?? 'Du khách'}')
+      ..writeln('XP: ${user?.totalPoints ?? 0} · Cấp ${user?.level ?? 1}')
+      ..writeln('');
+    if (earned.isNotEmpty) {
+      buffer.writeln('Huy hiệu: ${earned.join(', ')}');
+    }
+    if (_passportStamps.isNotEmpty) {
+      buffer.writeln('Tem hộ chiếu số:');
+      buffer.writeln(stampLines);
+    }
+    buffer.writeln('');
+    buffer.writeln('Khám phá thêm: ${AppEnv.webAppUrl}/explore');
+    buffer.writeln('#TimeLens #DiSanVietNam #CuChi');
+    await HistarNative.shareText(
+      subject: 'Hành trình HistAR',
+      text: buffer.toString(),
+    );
   }
 
   Future<void> _loadPassport() async {
@@ -226,7 +274,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ],
             const SizedBox(height: 24),
-            const Text('Hộ chiếu số (tem)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('Hộ chiếu số (tem)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                ),
+                IconButton(
+                  onPressed: _passportLoading ? null : _sharePassportExport,
+                  icon: const Icon(Icons.share_outlined),
+                  tooltip: 'Chia sẻ / xuất hộ chiếu',
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             if (_passportLoading)
               const Padding(
@@ -278,6 +337,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
             ],
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _passportLoading && _badgesLoading ? null : _shareJourneyExport,
+              icon: const Icon(Icons.ios_share),
+              label: const Text('Chia sẻ hành trình'),
+            ),
             const SizedBox(height: 24),
             OutlinedButton(
               onPressed: () async {

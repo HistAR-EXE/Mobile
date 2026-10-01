@@ -42,6 +42,35 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> loginWithGoogle() async {
+    state = state.copyWith(loading: true, clearError: true);
+    try {
+      final idToken = await _ref.read(googleSignInServiceProvider).signInAndGetIdToken();
+      if (idToken == null) {
+        state = state.copyWith(loading: false);
+        return;
+      }
+      final payload = await _ref.read(authRepositoryProvider).googleLogin(idToken);
+      state = state.copyWith(
+        user: AuthUser(
+          userId: payload.userId,
+          displayName: payload.displayName,
+          email: payload.email,
+          role: payload.role,
+          tier: payload.tier,
+          emailVerified: payload.emailVerified ?? true,
+          avatarUrl: payload.avatarUrl,
+        ),
+        loading: false,
+      );
+      final me = await _ref.read(profileRepositoryProvider).me();
+      await _applyProfile(me);
+    } catch (e) {
+      state = state.copyWith(loading: false, error: e.toString());
+      rethrow;
+    }
+  }
+
   Future<void> login(String email, String password) async {
     state = state.copyWith(loading: true, clearError: true);
     try {
