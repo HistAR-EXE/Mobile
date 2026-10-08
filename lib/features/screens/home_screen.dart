@@ -52,6 +52,13 @@ class HomeScreen extends ConsumerWidget {
             onTap: () => context.push('/tour/360/$cuChiId'),
           ),
           _QuickTile(
+            title: 'Cổng thời gian',
+            subtitle: '1948 · 1968 · Hiện nay (Premium)',
+            icon: Icons.history,
+            color: const Color(0xFF38BDF8),
+            onTap: () => context.push('/web/time-portal/$cuChiId?era=2026'),
+          ),
+          _QuickTile(
             title: 'Khám phá di tích',
             subtitle: 'Bản đồ & danh sách heritage',
             icon: Icons.explore,

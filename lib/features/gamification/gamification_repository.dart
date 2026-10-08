@@ -16,20 +16,30 @@ class GamificationRepository {
       );
 
   Future<QuestProgress> startQuest(String questId) => _api.postData(
-        '/api/me/quests/$questId/start',
+        '/api/quests/$questId/start',
         parse: (raw) => QuestProgress.fromJson(Map<String, dynamic>.from(raw as Map)),
       );
 
   Future<QuestProgress?> myProgress(String questId) async {
     try {
       return await _api.getData(
-        '/api/me/quests/$questId',
+        '/api/quests/$questId/progress',
         parse: (raw) => QuestProgress.fromJson(Map<String, dynamic>.from(raw as Map)),
       );
     } catch (_) {
       return null;
     }
   }
+
+  Future<ChapterBonusResult> claimChapterBonus({
+    required String locationId,
+    required String unlockKey,
+  }) =>
+      _api.postData(
+        '/api/quests/chapter-bonus',
+        query: {'locationId': locationId, 'unlockKey': unlockKey},
+        parse: (raw) => ChapterBonusResult.fromJson(Map<String, dynamic>.from(raw as Map)),
+      );
 
   Future<CheckinResult> checkin({
     required String locationId,

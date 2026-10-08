@@ -4,19 +4,30 @@ import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:histar_mobile/core/config/env.dart';
 import 'package:histar_mobile/core/theme/app_theme.dart';
+import 'package:histar_mobile/features/gamification/cu_chi_keys.dart';
 import 'package:histar_mobile/features/panorama/panorama_models.dart';
 import 'package:histar_mobile/features/visit/screen_visit_session.dart';
 import 'package:histar_mobile/shared/providers.dart';
 import 'package:panorama_viewer/panorama_viewer.dart' as pv;
 import 'package:webview_flutter/webview_flutter.dart';
 
-/// Phase-1 Tour 360: native scenes + dwell discovery XP (parity with FE Tour360Page).
+/// Tour 360: native scenes + dwell discovery XP (parity with FE Tour360Page).
 class Tour360Screen extends ConsumerStatefulWidget {
-  const Tour360Screen({super.key, required this.locationId});
+  const Tour360Screen({
+    super.key,
+    required this.locationId,
+    this.initialPanoramaId,
+    this.initialView,
+    this.questRecord,
+  });
 
   final String locationId;
+  final String? initialPanoramaId;
+  final String? initialView;
+  final String? questRecord;
 
   @override
   ConsumerState<Tour360Screen> createState() => _Tour360ScreenState();
@@ -34,6 +45,7 @@ class _Tour360ScreenState extends ConsumerState<Tour360Screen> with WidgetsBindi
   bool _flatFallback = false;
 
   final Set<String> _recordedScenes = {};
+  final Set<String> _recordedKeys = {};
   Timer? _dwellTimer;
   bool _recording = false;
   late final ScreenVisitSession _visitSession;
@@ -48,6 +60,9 @@ class _Tour360ScreenState extends ConsumerState<Tour360Screen> with WidgetsBindi
         locationId: widget.locationId,
         mode: 'online',
       ));
+      if (widget.initialView == 'illustrated' || widget.initialView == 'map') {
+        unawaited(_openAuthWebTour(view: widget.initialView!));
+      }
     });
     _load();
   }
@@ -85,6 +100,7 @@ class _Tour360ScreenState extends ConsumerState<Tour360Screen> with WidgetsBindi
       try {
         final summary = await ref.read(discoveryRepositoryProvider).summary(widget.locationId);
         for (final key in summary.keys) {
+          _recordedKeys.add(key);
           if (key.startsWith('scene:')) {
             _recordedScenes.add(key.substring('scene:'.length));
           }
@@ -93,12 +109,19 @@ class _Tour360ScreenState extends ConsumerState<Tour360Screen> with WidgetsBindi
         // Offline / unauth — dwell will no-op on POST failure.
       }
       if (!mounted) return;
+      var startIndex = 0;
+      final want = widget.initialPanoramaId;
+      if (want != null && want.isNotEmpty) {
+        final idx = list.indexWhere((p) => p.id == want);
+        if (idx >= 0) startIndex = idx;
+      }
       setState(() {
         _panos = list;
+        _index = startIndex;
         _loading = false;
       });
       if (list.isNotEmpty) {
-        await _loadHotspots(list.first.id);
+        await _loadHotspots(list[startIndex].id);
         _armSceneDwell();
       }
     } catch (e) {
@@ -166,6 +189,30 @@ class _Tour360ScreenState extends ConsumerState<Tour360Screen> with WidgetsBindi
     if (_recording || _recordedScenes.contains(panoramaId) || _webMode) return;
     _recording = true;
     try {
+      Panorama? pano;
+      for (final p in _panos) {
+        if (p.id == panoramaId) {
+          pano = p;
+          break;
+        }
+      }
+      if (pano != null &&
+          isClinicPanorama(id: pano.id, title: pano.title) &&
+          !_recordedKeys.contains(tramXaQuestKey)) {
+        try {
+          final clinic = await ref.read(discoveryRepositoryProvider).record(
+                unlockKey: tramXaQuestKey,
+                locationId: widget.locationId,
+                source: 'tour_panorama',
+              );
+          _recordedKeys.add(tramXaQuestKey);
+          if (clinic.recorded && clinic.xpEarned > 0 && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('+${clinic.xpEarned} XP — trạm xá')),
+            );
+          }
+        } catch (_) {}
+      }
       final result = await ref.read(discoveryRepositoryProvider).record(
             unlockKey: 'scene:$panoramaId',
             locationId: widget.locationId,
@@ -186,35 +233,55 @@ class _Tour360ScreenState extends ConsumerState<Tour360Screen> with WidgetsBindi
     }
   }
 
-  void _openWebTour({bool mapView = false}) {
-    final path = mapView
-        ? '/tour/360/${widget.locationId}?view=map'
-        : '/tour/360/${widget.locationId}';
-    final url = '${AppEnv.webAppUrl}$path';
-    if (!url.startsWith('https://')) {
-      setState(() {
-        _webMode = true;
-        _webError = 'Tour web cần HTTPS. Kiểm tra WEB_APP_URL.';
-        _web = null;
-      });
+  Future<void> _recordSaBanFragment() async {
+    if (_recordedKeys.contains(saBanQuestKey)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bạn đã nhặt mảnh sa bàn rồi.')),
+      );
       return;
     }
-    _clearDwell();
-    _web = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onWebResourceError: (error) {
-            if (!mounted) return;
-            setState(() => _webError = error.description);
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(url));
-    setState(() {
-      _webError = null;
-      _webMode = true;
-    });
+    try {
+      final result = await ref.read(discoveryRepositoryProvider).record(
+            unlockKey: saBanQuestKey,
+            locationId: widget.locationId,
+            source: 'map',
+          );
+      _recordedKeys.add(saBanQuestKey);
+      if (!mounted) return;
+      if (result.recorded && result.xpEarned > 0) {
+        await ref.read(authControllerProvider.notifier).refreshProfileFromServer();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('+${result.xpEarned} XP — mảnh sa bàn')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã ghi nhận mảnh sa bàn.')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
+
+  Future<void> _openAuthWebTour({String view = 'illustrated'}) async {
+    final params = <String, String>{'view': view};
+    if (widget.questRecord != null && widget.questRecord!.isNotEmpty) {
+      params['questRecord'] = widget.questRecord!;
+    }
+    if (widget.initialPanoramaId != null && widget.initialPanoramaId!.isNotEmpty) {
+      params['panorama'] = widget.initialPanoramaId!;
+    }
+    final q = Uri(queryParameters: params).query;
+    final path = '/tour/360/${widget.locationId}?$q';
+    if (!mounted) return;
+    await context.push('/web?path=${Uri.encodeComponent(path)}&title=${Uri.encodeComponent('Tour 360')}');
+  }
+
+  void _openWebTour({bool mapView = false}) {
+    unawaited(_openAuthWebTour(view: mapView ? 'map' : 'panorama'));
   }
 
   Widget _flatViewer(String url) {
@@ -387,12 +454,16 @@ class _Tour360ScreenState extends ConsumerState<Tour360Screen> with WidgetsBindi
                                   ),
                                   const Spacer(),
                                   TextButton(
-                                    onPressed: () => _openWebTour(mapView: true),
-                                    child: const Text('Bản đồ'),
+                                    onPressed: () => unawaited(_recordSaBanFragment()),
+                                    child: const Text('Mảnh sa bàn'),
                                   ),
                                   TextButton(
-                                    onPressed: () => _openWebTour(),
-                                    child: const Text('Viewer đầy đủ'),
+                                    onPressed: () => unawaited(_openAuthWebTour(view: 'illustrated')),
+                                    child: const Text('Sơ đồ'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => _openWebTour(mapView: true),
+                                    child: const Text('Bản đồ'),
                                   ),
                                 ],
                               ),

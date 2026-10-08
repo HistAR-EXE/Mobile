@@ -84,17 +84,22 @@ lib/
 - **Mobile:** màn `/squad` — REST `POST /api/squads`, `POST /api/squads/join`, `GET /api/squads/me` (xem `lib/features/squad/`).
 - **WebSocket live** (trạm/tiến độ đồng bộ): dùng FE [`/squad`](WEB_APP_URL/squad) hoặc deep-link **Mở lobby Web** trên màn tiểu đội. Native WS (`web_socket_channel`) có thể bổ sung sau; hiện ưu tiên parity REST trên app.
 
-## Tour 360
+## Tour 360 & mật lệnh Củ Chi
 
-- Native: danh sách scene + ảnh panorama + chip scene-link từ API hotspots.
-- Nút **Viewer đầy đủ**: WebView tới FE `/tour/360/{locationId}` (Photo Sphere Viewer đầy đủ).
+- Native: scene dwell ghi `scene:{id}`; trạm xá ghi `tour:tram-xa`; nút **Mảnh sa bàn** ghi `tour:sa-ban`.
+- Sơ đồ / bản đồ đầy đủ: Auth WebView (inject JWT) tới FE `/tour/360/...`.
+- Hành trình mật lệnh native trên chi tiết quest (deep link tour / chat / scan / artifact).
+- Cổng thời gian, minigame, cuộc gọi Chrono: Auth WebView tới FE (`/time-portal`, `/quests/.../play/...`, `/chat?call=1`).
+- `WEB_APP_URL` phải là bản FE đã có route `/time-portal`.
 
 ## Outcome 1 (EXE201) checklist
 
 - [ ] App chạy trên thiết bị thật, gọi API prod
 - [ ] Luồng: login → explore/Củ Chi → Tour 360 → chat → quest hoặc check-in
-- [ ] AAB trên Internal testing
+- [ ] Free: era paywall; Premium: ghi `era:1948`/`1968`; hai scene mở 337–339
+- [ ] AAB trên Internal testing (version `1.0.2+3`)
 - [x] Privacy URL public
+- [ ] Data safety theo `docs/PLAY_DATA_SAFETY_ANSWERS.md`
 - [ ] Video demo 5–7 phút
 
 ## Lệnh hữu ích

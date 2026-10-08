@@ -1,3 +1,56 @@
+class QuestStep {
+  const QuestStep({
+    required this.id,
+    required this.stepOrder,
+    required this.unlockKey,
+    required this.title,
+    required this.objective,
+    this.description,
+    this.hint,
+    required this.actionType,
+    this.minigameId,
+    this.actionLabel,
+    this.xpPartial,
+    this.chatPrompt,
+    this.portalEra,
+    this.previewImage,
+  });
+
+  final String id;
+  final int stepOrder;
+  final String unlockKey;
+  final String title;
+  final String objective;
+  final String? description;
+  final String? hint;
+  final String actionType;
+  final String? minigameId;
+  final String? actionLabel;
+  final int? xpPartial;
+  final String? chatPrompt;
+  final int? portalEra;
+  final String? previewImage;
+
+  factory QuestStep.fromJson(Map<String, dynamic> json) {
+    return QuestStep(
+      id: json['id'] as String? ?? '',
+      stepOrder: (json['stepOrder'] as num?)?.toInt() ?? 0,
+      unlockKey: json['unlockKey'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      objective: json['objective'] as String? ?? '',
+      description: json['description'] as String?,
+      hint: json['hint'] as String?,
+      actionType: json['actionType'] as String? ?? 'tour',
+      minigameId: json['minigameId'] as String?,
+      actionLabel: json['actionLabel'] as String?,
+      xpPartial: (json['xpPartial'] as num?)?.toInt(),
+      chatPrompt: json['chatPrompt'] as String?,
+      portalEra: (json['portalEra'] as num?)?.toInt(),
+      previewImage: json['previewImage'] as String?,
+    );
+  }
+}
+
 class Quest {
   const Quest({
     required this.id,
@@ -8,6 +61,9 @@ class Quest {
     this.requireOnsiteCheckin,
     this.stepsTotal,
     this.coverImage,
+    this.story,
+    this.unlockDiscoveryKeys,
+    this.steps = const [],
   });
 
   final String id;
@@ -18,8 +74,19 @@ class Quest {
   final bool? requireOnsiteCheckin;
   final int? stepsTotal;
   final String? coverImage;
+  final String? story;
+  final String? unlockDiscoveryKeys;
+  final List<QuestStep> steps;
 
   factory Quest.fromJson(Map<String, dynamic> json) {
+    final rawSteps = json['steps'];
+    final steps = rawSteps is List
+        ? rawSteps
+            .whereType<Map>()
+            .map((e) => QuestStep.fromJson(Map<String, dynamic>.from(e)))
+            .toList()
+        : <QuestStep>[];
+    steps.sort((a, b) => a.stepOrder.compareTo(b.stepOrder));
     return Quest(
       id: json['id'] as String? ?? '',
       locationId: json['locationId'] as String? ?? '',
@@ -29,6 +96,9 @@ class Quest {
       requireOnsiteCheckin: json['requireOnsiteCheckin'] as bool?,
       stepsTotal: (json['stepsTotal'] as num?)?.toInt(),
       coverImage: json['coverImage'] as String?,
+      story: json['story'] as String?,
+      unlockDiscoveryKeys: json['unlockDiscoveryKeys'] as String?,
+      steps: steps,
     );
   }
 }
@@ -58,6 +128,23 @@ class QuestProgress {
       currentStep: (json['currentStep'] as num?)?.toInt() ?? 0,
       stepsTotal: (json['stepsTotal'] as num?)?.toInt() ?? 0,
       pointsReward: (json['pointsReward'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class ChapterBonusResult {
+  const ChapterBonusResult({
+    required this.awarded,
+    required this.alreadyClaimed,
+  });
+
+  final int awarded;
+  final bool alreadyClaimed;
+
+  factory ChapterBonusResult.fromJson(Map<String, dynamic> json) {
+    return ChapterBonusResult(
+      awarded: (json['awarded'] as num?)?.toInt() ?? 0,
+      alreadyClaimed: json['alreadyClaimed'] as bool? ?? false,
     );
   }
 }

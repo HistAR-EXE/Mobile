@@ -146,10 +146,11 @@ class ApiClient {
   Future<T> postData<T>(
     String path, {
     Object? data,
+    Map<String, dynamic>? query,
     required T Function(Object? raw) parse,
   }) async {
     try {
-      final res = await _dio.post(path, data: data);
+      final res = await _dio.post(path, data: data, queryParameters: query);
       final body = res.data;
       return _unwrap(body, parse);
     } on DioException catch (e) {

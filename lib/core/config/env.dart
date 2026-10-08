@@ -55,5 +55,5 @@ class AppEnv {
   }
 
   /// Keep in sync with [pubspec.yaml] version for Settings display.
-  static const String appVersion = '1.0.1+2';
+  static const String appVersion = '1.0.2+3';
 }

@@ -24,6 +24,7 @@ import 'package:histar_mobile/features/screens/squad_screen.dart';
 import 'package:histar_mobile/features/screens/splash_screen.dart';
 import 'package:histar_mobile/features/screens/teacher_screen.dart';
 import 'package:histar_mobile/features/screens/tour360_screen.dart';
+import 'package:histar_mobile/features/screens/authenticated_webview_screen.dart';
 import 'package:histar_mobile/features/screens/verify_email_screen.dart';
 import 'package:histar_mobile/shared/providers.dart';
 
@@ -145,8 +146,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/teacher', builder: (_, __) => const TeacherScreen()),
       GoRoute(
         path: '/tour/360/:locationId',
-        builder: (_, state) =>
-            Tour360Screen(locationId: state.pathParameters['locationId']!),
+        builder: (_, state) => Tour360Screen(
+          locationId: state.pathParameters['locationId']!,
+          initialPanoramaId: state.uri.queryParameters['panorama'],
+          initialView: state.uri.queryParameters['view'],
+          questRecord: state.uri.queryParameters['questRecord'],
+        ),
       ),
       GoRoute(
         path: '/artifacts/:locationId',
@@ -155,8 +160,43 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/chat/:characterId',
-        builder: (_, state) =>
-            ChatScreen(characterId: state.pathParameters['characterId']!),
+        builder: (_, state) => ChatScreen(
+          characterId: state.pathParameters['characterId']!,
+          locationId: state.uri.queryParameters['locationId'],
+          questRecord: state.uri.queryParameters['questRecord'],
+          questPrompt: state.uri.queryParameters['questPrompt'],
+          call: state.uri.queryParameters['call'] == '1',
+        ),
+      ),
+      GoRoute(
+        path: '/web/time-portal/:locationId',
+        builder: (_, state) {
+          final id = state.pathParameters['locationId']!;
+          final q = state.uri.query;
+          final path = '/time-portal/$id${q.isEmpty ? '' : '?$q'}';
+          return AuthenticatedWebViewScreen(pathAndQuery: path, title: 'Cổng thời gian');
+        },
+      ),
+      GoRoute(
+        path: '/web/quests/:questId/play/:minigameId',
+        builder: (_, state) {
+          final questId = state.pathParameters['questId']!;
+          final minigameId = state.pathParameters['minigameId']!;
+          return AuthenticatedWebViewScreen(
+            pathAndQuery: '/quests/$questId/play/$minigameId',
+            title: 'Minigame',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/web',
+        builder: (_, state) {
+          final path = state.uri.queryParameters['path'] ?? '/';
+          return AuthenticatedWebViewScreen(
+            pathAndQuery: path.startsWith('/') ? path : '/$path',
+            title: state.uri.queryParameters['title'] ?? 'TimeLens Web',
+          );
+        },
       ),
     ],
   );
