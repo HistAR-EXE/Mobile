@@ -88,7 +88,7 @@ class PricingScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: () => launchUrl(
-                  Uri.parse('${AppEnv.webAppUrl}/checkout/b2b2c'),
+                  Uri.parse('${AppEnv.webAppUrl}/checkout/b2g'),
                   mode: LaunchMode.externalApplication,
                 ),
                 icon: const Icon(Icons.museum_outlined),
